@@ -2,3 +2,6 @@
 **/build/
 **/*.kdev4*
 **/*.svn/
+**/*.cproject
+**/*.project
+**/*.settings/
