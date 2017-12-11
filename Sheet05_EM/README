@@ -1,0 +1,12 @@
+Implement your solution in the file sheet05.cpp in the src directory.
+The necessary OpenCV header files are already included.
+
+For compilation please follow the instructions in the CMakeLists.txt file.
+
+Your program should run from the terminal with the following command:
+
+./bin/sheet05
+
+Please provide any other information required to run your program here...
+
+Your group members: ...
