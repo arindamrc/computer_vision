@@ -506,49 +506,76 @@ int cEpipolar::applyHomography(){
 
 class cDisparity{
 public:
-    cDisparity(){};
-    ~cDisparity(){};
-    int loadImages();
-    int computeDisparity();
+        cDisparity(){};
+        ~cDisparity(){};
+        int loadImages();
+        int computeDisparity();
 private:
-    Mat img1, img2;
+        Mat img1, img2;
+        int winSize = 15; // a 3 x 3 window for template matching
+//         int matchMethod = CV_TM_CCORR_NORMED; // The template matching metric
+        int matchMethod = CV_TM_SQDIFF; // The template matching metric
 };
 
 int cDisparity::loadImages(){
-    img1 = imread("images/aloe1.png");
-    img2 = imread("images/aloe2.png");
-    if(0==img1.data || 0==img2.data){
-        cout<<"error reading stereo images for disparity"<<endl;
-        exit(-1);
-    }
-    return 0;
+        img1 = imread("images/aloe1.png");
+        img2 = imread("images/aloe2.png");
+        if(0==img1.data || 0==img2.data){
+                cout<<"error reading stereo images for disparity"<<endl;
+                exit(-1);
+        }
+        return 0;
 }
 
 int cDisparity::computeDisparity(){
-    return 0;
+        assert(this->img1.rows == this->img2.rows); // The images are rectified
+        Mat_<float> dMap (this->img1.size(), this->img1.type());
+        for(int r = 0; r < this->img1.rows - this->winSize; r++){
+                Mat target = this->img2.rowRange(r, r+this->winSize).clone();
+                for(int c = 0; c < this->img1.cols - this->winSize; c++){
+                        Mat tmplt = this->img1.rowRange(r,r+this->winSize).colRange(c,c+this->winSize).clone();
+                        Mat result;
+                        matchTemplate(target, tmplt, result, matchMethod);
+                        double minVal, maxVal; 
+                        Point minLoc, maxLoc, matchLoc;
+                        minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc);
+                        if(this->matchMethod == CV_TM_SQDIFF || this->matchMethod == CV_TM_SQDIFF_NORMED){
+                                matchLoc = minLoc;
+                        }else{
+                                matchLoc = maxLoc;
+                        }
+                        int disparity = abs(c - matchLoc.x);
+                        dMap (r,c) = disparity;
+                }
+        }
+        normalize(dMap, dMap);
+        dMap = 255 * dMap;
+        imshow("disparity", dMap);
+        waitKey(0);
+        return 0;
 }
 
 int main()
 {
     // Q1: Fundamental Matrix
-    cout<<"Q1 and Q2....."<<endl;
-    cEpipolar epipolar;
-    epipolar.loadImages();
-    epipolar.loadCorresp();
-    epipolar.displayCorresp();
-    epipolar.computeFundMat();
-    epipolar.drawEpipolar();
+//     cout<<"Q1 and Q2....."<<endl;
+//     cEpipolar epipolar;
+//     epipolar.loadImages();
+//     epipolar.loadCorresp();
+//     epipolar.displayCorresp();
+//     epipolar.computeFundMat();
+//     epipolar.drawEpipolar();
 
     // Q3 Disparity map
-//     cout<<endl<<endl<<"Q3....."<<endl;
-//     cDisparity disparity;
-//     disparity.loadImages();
-//     disparity.computeDisparity();
+    cout<<endl<<endl<<"Q3....."<<endl;
+    cDisparity disparity;
+    disparity.loadImages();
+    disparity.computeDisparity();
 
     // Q4: Rectifying image pair
-    cout<<endl<<endl<<"Q4....."<<endl;
-    epipolar.rectify();
-    epipolar.applyHomography();
+//     cout<<endl<<endl<<"Q4....."<<endl;
+//     epipolar.rectify();
+//     epipolar.applyHomography();
 
     return 0;
 }
